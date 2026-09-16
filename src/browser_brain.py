@@ -8,6 +8,13 @@ class BrowserBrain:
         self.endpoint = endpoint
         self.playwright = sync_playwright().start()
         self.browser = self.playwright.chromium.connect_over_cdp(endpoint)
+
+        if not self.browser.contexts:
+            raise RuntimeError("No browser context found")
+
+        if not self.browser.contexts[0].pages:
+            raise RuntimeError("No browser page found")
+
         self.page = self.browser.contexts[0].pages[0]
 
     def respond(self, messages: list[dict[str, str]]) -> str:
@@ -16,11 +23,16 @@ class BrowserBrain:
         self.page.goto("https://chat.openai.com/")
         self.page.wait_for_timeout(3000)
 
+        self._check_page_ready()
+
         self.page.keyboard.type(prompt)
         self.page.keyboard.press("Enter")
 
-        response = self._wait_for_response()
-        return response
+        return self._wait_for_response()
+
+    def _check_page_ready(self):
+        if "chat.openai.com" not in self.page.url:
+            raise RuntimeError("ChatGPT page is not available")
 
     def _wait_for_response(self) -> str:
         """Basic response extraction.
