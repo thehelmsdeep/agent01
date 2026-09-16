@@ -3,6 +3,7 @@ import os
 from .agent import Agent
 from .brain import LLMBrain
 from .browser_brain import BrowserBrain
+from .browser_session import BrowserSessionManager
 from .tools.registry import ToolRegistry
 
 
@@ -10,6 +11,11 @@ def create_brain():
     provider = os.getenv("BRAIN", "api").lower()
 
     if provider == "browser":
+        session = BrowserSessionManager()
+        if not session.is_available():
+            raise RuntimeError(
+                "Chrome remote session is not available. Start Chrome with remote debugging on port 9222."
+            )
         return BrowserBrain()
 
     return LLMBrain()
