@@ -1,62 +1,74 @@
 # agent01
 
-Windows AI Agent project.
-
-## Goal
-
-Build a local browser-based AI agent that can operate a browser environment while keeping the user's personal ChatGPT conversations separate from the agent session.
+A Windows AI agent foundation built around an LLM API, explicit tools, memory, and an execution loop.
 
 ## Architecture
 
-```
+```text
 User
- |
- v
-Agent Runtime
- |
- +--> Browser Controller (Playwright)
- |
- +--> Separate Browser Profile
- |
- +--> LLM Brain (future)
+  |
+  v
+Agent Core
+  |
+  +--> Memory
+  |
+  +--> LLM Brain
+  |       |
+  |       v
+  |    Tool Decision
+  |
+  +--> Tool Registry
+          |
+          v
+      Windows Actions
 ```
 
-## Principles
+The LLM is the reasoning layer. The agent, not the model, owns execution, tool permissions, state, and the loop that observes results and sends the next context back to the model.
 
-- Separate agent browser profile
-- Do not use user's personal chats/cookies
-- Local-first architecture
-- Modular components
+## Project layout
 
-## Current Stack
-
-- Python
-- Playwright
-- Browser automation
-- Environment configuration
+```text
+agent01/
+├── src/
+│   ├── agent.py          # agent execution loop
+│   ├── brain.py          # LLM API adapter
+│   ├── config.py         # environment configuration
+│   ├── memory.py         # short-term conversation memory
+│   ├── main.py           # CLI entry point
+│   └── tools/
+│       ├── base.py       # tool contract
+│       └── registry.py   # tool registration/lookup
+├── tests/
+│   └── test_smoke.py
+├── .env.example
+├── .gitignore
+└── requirements.txt
+```
 
 ## Setup
 
-```bash
+```powershell
 python -m venv .venv
-
-# Windows
 .venv\Scripts\activate
-
 pip install -r requirements.txt
-
-python -m playwright install chromium
 ```
 
-## Project Status
+Copy `.env.example` to `.env` and configure the LLM API key and model.
 
-Phase 1:
-- Browser controller
-- Dedicated profile
-- Chat interface experiments
+## Run
 
-Future:
-- Agent planner
-- Tool system
-- Memory layer
-- Task execution
+```powershell
+python -m src.main
+```
+
+Without an API key, the project can still be imported and the core components can be tested, but an LLM-backed response requires a configured provider.
+
+## Roadmap
+
+1. LLM-backed planning
+2. Structured tool calls
+3. Windows observation tools
+4. Safe tool permissions and confirmations
+5. Execution/observation loop
+6. Persistent memory
+7. Browser and desktop automation
