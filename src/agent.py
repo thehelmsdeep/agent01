@@ -4,6 +4,7 @@ from .memory import MessageMemory, UserMemory, AgentMemory
 from .storage import MemoryStorage
 from .planner import Planner
 from .executor import ToolExecutor
+from .tool_selector import ToolSelector
 from .tools.registry import ToolRegistry
 
 
@@ -14,6 +15,7 @@ class Agent:
         self.brain = brain
         self.tools = tools
         self.planner = Planner()
+        self.selector = ToolSelector()
         self.executor = ToolExecutor(tools)
 
         self.memory = MessageMemory()
@@ -22,12 +24,10 @@ class Agent:
         self.context_builder = ContextBuilder()
 
         self.storage = MemoryStorage()
-
         self.load_memory()
 
     def load_memory(self) -> None:
         data = self.storage.load()
-
         self.user_memory.data.update(data.get("user_memory", {}))
         self.agent_memory.events.extend(data.get("agent_memory", []))
         self.memory.messages.extend(data.get("messages", []))
@@ -52,6 +52,12 @@ class Agent:
         )
 
         response = self.brain.respond(context)
+
+        action = self.selector.select(response)
+        if action:
+            result = self.executor.execute(action)
+            self.memory.add("tool", result)
+            response = result
 
         self.memory.add("assistant", response)
         self.agent_memory.remember(f"handled: {user_input}")
