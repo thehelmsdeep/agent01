@@ -1,10 +1,22 @@
+import os
+
 from .agent import Agent
 from .brain import LLMBrain
+from .browser_brain import BrowserBrain
 from .tools.registry import ToolRegistry
 
 
+def create_brain():
+    provider = os.getenv("BRAIN", "api").lower()
+
+    if provider == "browser":
+        return BrowserBrain()
+
+    return LLMBrain()
+
+
 def main() -> None:
-    agent = Agent(LLMBrain(), ToolRegistry())
+    agent = Agent(create_brain(), ToolRegistry())
     print("agent01 ready. Type 'exit' to quit.")
 
     while True:
