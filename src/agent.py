@@ -3,6 +3,7 @@ from .context import ContextBuilder
 from .memory import MessageMemory, UserMemory, AgentMemory
 from .storage import MemoryStorage
 from .planner import Planner
+from .executor import ToolExecutor
 from .tools.registry import ToolRegistry
 
 
@@ -13,6 +14,7 @@ class Agent:
         self.brain = brain
         self.tools = tools
         self.planner = Planner()
+        self.executor = ToolExecutor(tools)
 
         self.memory = MessageMemory()
         self.user_memory = UserMemory()
