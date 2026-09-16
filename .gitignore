@@ -4,5 +4,4 @@ __pycache__/
 *.py[cod]
 .env
 .vscode/
-.browser_profile/
-models/
+.agent_profile/
