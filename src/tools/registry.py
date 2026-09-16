@@ -1,11 +1,13 @@
 from typing import Any
 
 from .base import Tool
+from .calculator import CalculatorTool
 
 
 class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, Tool] = {}
+        self.register(CalculatorTool())
 
     def register(self, tool: Tool) -> None:
         if tool.name in self._tools:
