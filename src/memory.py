@@ -11,6 +11,12 @@ class MessageMemory:
     def recent(self, limit: int = 20) -> list[dict[str, str]]:
         return self.messages[-limit:]
 
+    def export(self) -> dict:
+        return {"messages": self.messages}
+
+    def load(self, data: dict) -> None:
+        self.messages = data.get("messages", [])
+
 
 @dataclass
 class UserMemory:
@@ -23,6 +29,12 @@ class UserMemory:
     def get(self, key: str, default=None):
         return self.data.get(key, default)
 
+    def export(self) -> dict:
+        return self.data
+
+    def load(self, data: dict) -> None:
+        self.data = data
+
 
 @dataclass
 class AgentMemory:
@@ -34,3 +46,9 @@ class AgentMemory:
 
     def recent(self, limit: int = 20) -> list[str]:
         return self.events[-limit:]
+
+    def export(self) -> dict:
+        return {"events": self.events}
+
+    def load(self, data: dict) -> None:
+        self.events = data.get("events", [])
