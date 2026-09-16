@@ -2,6 +2,7 @@ from .brain import LLMBrain
 from .context import ContextBuilder
 from .memory import MessageMemory, UserMemory, AgentMemory
 from .storage import MemoryStorage
+from .planner import Planner
 from .tools.registry import ToolRegistry
 
 
@@ -11,6 +12,7 @@ class Agent:
     def __init__(self, brain: LLMBrain, tools: ToolRegistry) -> None:
         self.brain = brain
         self.tools = tools
+        self.planner = Planner()
 
         self.memory = MessageMemory()
         self.user_memory = UserMemory()
@@ -37,6 +39,9 @@ class Agent:
 
     def run_once(self, user_input: str) -> str:
         self.memory.add("user", user_input)
+
+        plan = self.planner.create_plan(user_input)
+        self.agent_memory.remember({"plan": plan})
 
         context = self.context_builder.build(
             self.memory,
