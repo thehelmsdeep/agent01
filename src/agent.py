@@ -6,6 +6,7 @@ from .planner import Planner
 from .executor import ToolExecutor
 from .tool_selector import ToolSelector
 from .observation import ObservationLoop
+from .reasoning_loop import ReasoningLoop
 from .tools.registry import ToolRegistry
 
 
@@ -19,6 +20,7 @@ class Agent:
         self.selector = ToolSelector()
         self.executor = ToolExecutor(tools)
         self.observer = ObservationLoop()
+        self.reasoning = ReasoningLoop()
 
         self.memory = MessageMemory()
         self.user_memory = UserMemory()
@@ -44,24 +46,32 @@ class Agent:
     def run_once(self, user_input: str) -> str:
         self.memory.add("user", user_input)
 
-        plan = self.planner.create_plan(user_input)
-        self.agent_memory.remember({"plan": plan})
+        step = 0
+        observation = None
+        response = ""
 
-        context = self.context_builder.build(
-            self.memory,
-            self.user_memory,
-            self.agent_memory,
-        )
+        while self.reasoning.should_continue(step, observation):
+            plan = self.planner.create_plan(user_input)
+            self.agent_memory.remember({"plan": plan})
 
-        response = self.brain.respond(context)
+            context = self.context_builder.build(
+                self.memory,
+                self.user_memory,
+                self.agent_memory,
+            )
 
-        action = self.selector.select(response)
-        if action:
+            response = self.brain.respond(context)
+            action = self.selector.select(response)
+
+            if not action:
+                break
+
             result = self.executor.execute(action)
             observation = self.observer.observe(action, result)
             self.agent_memory.remember(observation)
             self.memory.add("tool", result)
-            response = result
+
+            step += 1
 
         self.memory.add("assistant", response)
         self.agent_memory.remember(f"handled: {user_input}")
