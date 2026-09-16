@@ -5,6 +5,7 @@ from .storage import MemoryStorage
 from .planner import Planner
 from .executor import ToolExecutor
 from .tool_selector import ToolSelector
+from .observation import ObservationLoop
 from .tools.registry import ToolRegistry
 
 
@@ -17,6 +18,7 @@ class Agent:
         self.planner = Planner()
         self.selector = ToolSelector()
         self.executor = ToolExecutor(tools)
+        self.observer = ObservationLoop()
 
         self.memory = MessageMemory()
         self.user_memory = UserMemory()
@@ -56,12 +58,13 @@ class Agent:
         action = self.selector.select(response)
         if action:
             result = self.executor.execute(action)
+            observation = self.observer.observe(action, result)
+            self.agent_memory.remember(observation)
             self.memory.add("tool", result)
             response = result
 
         self.memory.add("assistant", response)
         self.agent_memory.remember(f"handled: {user_input}")
-
         self.save_memory()
 
         return response
