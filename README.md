@@ -1,6 +1,6 @@
 # agent01
 
-A Windows AI agent foundation built around an LLM API, explicit tools, memory, and an execution loop.
+A Windows AI agent foundation built around an LLM brain, explicit tools, separated memory layers, and an execution loop.
 
 ## Architecture
 
@@ -10,39 +10,79 @@ User
   v
 Agent Core
   |
-  +--> Memory
+  +----------------+
+  |                |
+  v                v
+User Memory     Agent Memory
   |
-  +--> LLM Brain
-  |       |
-  |       v
-  |    Tool Decision
-  |
-  +--> Tool Registry
-          |
-          v
-      Windows Actions
+  +----------------+
+                   |
+                   v
+            Context Builder
+                   |
+                   v
+              LLM Brain
+                   |
+                   v
+            Tool Decision
+                   |
+                   v
+            Tool Registry
+                   |
+                   v
+          Windows Actions
 ```
 
-The LLM is the reasoning layer. The agent, not the model, owns execution, tool permissions, state, and the loop that observes results and sends the next context back to the model.
+The LLM is the reasoning layer only. The agent owns execution, tool permissions, state, memory management, and the execution loop.
+
+The agent keeps two independent memory systems:
+
+- **User Memory**: user preferences, profile information, and long-term user context.
+- **Agent Memory**: internal agent state, completed tasks, decisions, and execution history.
+
+This separation allows the agent to use different LLM providers without losing user or agent context.
 
 ## Project layout
 
 ```text
 agent01/
 ├── src/
-│   ├── agent.py          # agent execution loop
-│   ├── brain.py          # LLM API adapter
-│   ├── config.py         # environment configuration
-│   ├── memory.py         # short-term conversation memory
-│   ├── main.py           # CLI entry point
+│   ├── agent.py              # agent execution loop
+│   ├── brain.py              # LLM adapter
+│   ├── config.py             # environment configuration
+│   ├── memory.py             # conversation memory
+│   ├── user_memory.py        # user-specific memory
+│   ├── agent_memory.py       # agent internal memory
+│   ├── main.py               # CLI entry point
 │   └── tools/
-│       ├── base.py       # tool contract
-│       └── registry.py   # tool registration/lookup
+│       ├── base.py           # tool contract
+│       └── registry.py       # tool registration/lookup
 ├── tests/
 │   └── test_smoke.py
 ├── .env.example
 ├── .gitignore
 └── requirements.txt
+```
+
+## Memory Flow
+
+```text
+User Message
+      |
+      v
+Agent Core
+      |
+      +--> Conversation History
+      |
+      +--> User Memory
+      |
+      +--> Agent Memory
+      |
+      v
+Context sent to LLM
+      |
+      v
+Response + Tool Actions
 ```
 
 ## Setup
@@ -53,7 +93,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and configure the LLM API key and model.
+Copy `.env.example` to `.env` and configure the LLM provider.
 
 ## Run
 
@@ -61,14 +101,13 @@ Copy `.env.example` to `.env` and configure the LLM API key and model.
 python -m src.main
 ```
 
-Without an API key, the project can still be imported and the core components can be tested, but an LLM-backed response requires a configured provider.
-
 ## Roadmap
 
-1. LLM-backed planning
-2. Structured tool calls
-3. Windows observation tools
-4. Safe tool permissions and confirmations
-5. Execution/observation loop
-6. Persistent memory
+1. Context builder
+2. LLM-backed planning
+3. Structured tool calls
+4. Windows observation tools
+5. Safe tool permissions and confirmations
+6. Persistent memory storage
 7. Browser and desktop automation
+8. Multi-user agent sessions
