@@ -1,6 +1,7 @@
 from .brain import LLMBrain
 from .context import ContextBuilder
 from .memory import MessageMemory, UserMemory, AgentMemory
+from .storage import MemoryStorage
 from .tools.registry import ToolRegistry
 
 
@@ -13,6 +14,22 @@ class Agent:
         self.user_memory = UserMemory()
         self.agent_memory = AgentMemory()
         self.context_builder = ContextBuilder()
+        self.storage = MemoryStorage()
+
+        self.load_memory()
+
+    def load_memory(self) -> None:
+        data = self.storage.load()
+        self.user_memory.data.update(data.get("user_memory", {}))
+        self.agent_memory.events.extend(data.get("agent_memory", []))
+        self.memory.messages.extend(data.get("messages", []))
+
+    def save_memory(self) -> None:
+        self.storage.save({
+            "messages": self.memory.messages,
+            "user_memory": self.user_memory.data,
+            "agent_memory": self.agent_memory.events,
+        })
 
     def run_once(self, user_input: str) -> str:
         self.memory.add("user", user_input)
@@ -27,5 +44,7 @@ class Agent:
 
         self.memory.add("assistant", response)
         self.agent_memory.remember(f"handled: {user_input}")
+
+        self.save_memory()
 
         return response
