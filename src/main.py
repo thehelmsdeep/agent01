@@ -1,9 +1,11 @@
 import os
+import time
 
 from .agent import Agent
 from .brain import LLMBrain
 from .browser_brain import BrowserBrain
 from .browser_session import BrowserSessionManager
+from .chrome_launcher import ChromeLauncher
 from .tools.registry import ToolRegistry
 
 
@@ -14,10 +16,17 @@ def create_brain():
         session = BrowserSessionManager()
 
         if not session.is_available():
-            raise RuntimeError(
-                "No existing Chrome remote session found. "
-                "Start Chrome with remote debugging first."
-            )
+            launcher = ChromeLauncher()
+            launcher.launch()
+
+            for _ in range(15):
+                time.sleep(1)
+                if session.is_available():
+                    break
+            else:
+                raise RuntimeError(
+                    "Chrome remote session is not available after launch."
+                )
 
         return BrowserBrain()
 
