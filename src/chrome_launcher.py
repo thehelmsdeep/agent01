@@ -1,5 +1,5 @@
-import subprocess
 import os
+import subprocess
 
 
 class ChromeLauncher:
@@ -18,7 +18,18 @@ class ChromeLauncher:
         ]
 
         if self.profile_dir:
-            command.append(f"--user-data-dir={self.profile_dir}")
+            profile_path = os.path.normpath(self.profile_dir)
+            profile_name = os.path.basename(profile_path)
+
+            # Chrome expects --user-data-dir to point to the parent
+            # "User Data" directory, while the selected profile is
+            # specified separately with --profile-directory.
+            if profile_name.lower() == "default":
+                user_data_dir = os.path.dirname(profile_path)
+                command.append(f"--user-data-dir={user_data_dir}")
+                command.append("--profile-directory=Default")
+            else:
+                command.append(f"--user-data-dir={profile_path}")
 
         subprocess.Popen(command)
         return True
