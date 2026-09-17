@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 
 class ChromeLauncher:
@@ -11,6 +12,17 @@ class ChromeLauncher:
     def launch(self):
         if not self.chrome_path:
             raise RuntimeError("CHROME_PATH is not configured")
+
+        # Chrome must be started with remote debugging from the first
+        # process. If a normal Chrome instance is already running, a new
+        # process will reuse it and the debugging port will not be opened.
+        subprocess.run(
+            ["taskkill", "/F", "/IM", "chrome.exe"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        time.sleep(2)
 
         command = [
             self.chrome_path,
