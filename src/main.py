@@ -10,27 +10,29 @@ from .tools.registry import ToolRegistry
 
 
 def create_brain():
-    provider = os.getenv("BRAIN", "api").lower()
+    # Browser ChatGPT is the primary brain.
+    # API LLM is only an optional fallback.
+    provider = os.getenv("BRAIN", "browser").lower()
 
-    if provider == "browser":
-        session = BrowserSessionManager()
+    if provider == "api":
+        return LLMBrain()
 
-        if not session.is_available():
-            launcher = ChromeLauncher()
-            launcher.launch()
+    session = BrowserSessionManager()
 
-            for _ in range(15):
-                time.sleep(1)
-                if session.is_available():
-                    break
-            else:
-                raise RuntimeError(
-                    "Chrome remote session is not available after launch."
-                )
+    if not session.is_available():
+        launcher = ChromeLauncher()
+        launcher.launch()
 
-        return BrowserBrain()
+        for _ in range(15):
+            time.sleep(1)
+            if session.is_available():
+                break
+        else:
+            raise RuntimeError(
+                "Chrome remote session is not available after launch."
+            )
 
-    return LLMBrain()
+    return BrowserBrain()
 
 
 def main() -> None:
