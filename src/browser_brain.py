@@ -20,8 +20,8 @@ class BrowserBrain:
     def respond(self, messages: list[dict[str, str]]) -> str:
         prompt = messages[-1]["content"]
 
-        self.page.goto("https://chat.openai.com/")
-        self.page.wait_for_timeout(3000)
+        self.page.goto("https://chatgpt.com/")
+        self.page.wait_for_timeout(5000)
 
         self._check_page_ready()
 
@@ -31,7 +31,7 @@ class BrowserBrain:
         return self._wait_for_response()
 
     def _check_page_ready(self):
-        if "chat.openai.com" not in self.page.url:
+        if "chatgpt.com" not in self.page.url:
             raise RuntimeError("ChatGPT page is not available")
 
     def _wait_for_response(self) -> str:
